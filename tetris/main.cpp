@@ -59,19 +59,8 @@ int main() {
                     }
                 } else if (key == 27) { // ESC键
                     if (state == GAME) {
-                        int gameDuration = (int)(time(NULL) - game.startTime);
-                        int mostUsedBlock = 0;
-                        int maxCount = 0;
-                        for (int i = 0; i < 7; i++) {
-                            if (game.blockUsage[i] > maxCount) {
-                                maxCount = game.blockUsage[i];
-                                mostUsedBlock = i;
-                            }
-                        }
-                        addHistoryRecord(&game.history, game.currentPlayerID, game.playerName, game.score, 
-                                       game.level, game.linesCleared, gameDuration, 
-                                       game.difficulty, game.blockUsage, mostUsedBlock);
-                        saveHistoryToFile(&game.history, "history.txt");
+                        // 直接更新历史记录文件，不需要再添加新记录
+                        updateHistoryFile(&game);
                     }
                     state = MENU;
                 }
@@ -153,19 +142,8 @@ int main() {
                     int highScoreBoxY = infoBoxY + infoBoxHeight * 3 + 60; // 三个信息框的高度
                     Button backButton = {infoBoxX, highScoreBoxY + infoBoxHeight + 40, 300, 60, L"返回菜单", 35};
                     if (isMouseInButton(backButton, mouseX, mouseY)) {
-                        int gameDuration = (int)(time(NULL) - game.startTime);
-                        int mostUsedBlock = 0;
-                        int maxCount = 0;
-                        for (int i = 0; i < 7; i++) {
-                            if (game.blockUsage[i] > maxCount) {
-                                maxCount = game.blockUsage[i];
-                                mostUsedBlock = i;
-                            }
-                        }
-                        addHistoryRecord(&game.history, game.currentPlayerID, game.playerName, game.score, 
-                                       game.level, game.linesCleared, gameDuration, 
-                                       game.difficulty, game.blockUsage, mostUsedBlock);
-                        saveHistoryToFile(&game.history, "history.txt");
+                        // 直接更新历史记录文件，不需要再添加新记录
+                        updateHistoryFile(&game);
                         
                         state = MENU;
                     }
@@ -177,19 +155,8 @@ int main() {
                         initGame(&game, game.difficulty, 1, "Player1");
                         state = GAME;
                     } else if (isMouseInButton(backButton, mouseX, mouseY)) {
-                        int gameDuration = game.gameDuration;
-                        int mostUsedBlock = 0;
-                        int maxCount = 0;
-                        for (int i = 0; i < 7; i++) {
-                            if (game.blockUsage[i] > maxCount) {
-                                maxCount = game.blockUsage[i];
-                                mostUsedBlock = i;
-                            }
-                        }
-                        addHistoryRecord(&game.history, game.currentPlayerID, game.playerName, game.score, 
-                                       game.level, game.linesCleared, gameDuration, 
-                                       game.difficulty, game.blockUsage, mostUsedBlock);
-                        saveHistoryToFile(&game.history, "history.txt");
+                        // 直接更新历史记录文件，不需要再添加新记录
+                        updateHistoryFile(&game);
                         
                         state = MENU;
                     }
@@ -199,8 +166,24 @@ int main() {
         
         if (state == GAME) {
             frameCount++;
-            dropSpeed = 30 - (game.level - 1) * 3;
-            if (dropSpeed < 5) dropSpeed = 5;
+            
+            int baseSpeed;
+            switch (game.difficulty) {
+                case EASY:
+                    baseSpeed = 60;
+                    break;
+                case MEDIUM:
+                    baseSpeed = 30;
+                    break;
+                case HARD:
+                    baseSpeed = 10;
+                    break;
+                default:
+                    baseSpeed = 30;
+            }
+            
+            dropSpeed = baseSpeed - (game.level - 1) * 2;
+            if (dropSpeed < 3) dropSpeed = 3;
             
             // 控制消除动画的更新频率
             static int animationTimer = 0;
@@ -219,18 +202,8 @@ int main() {
             
             if (game.gameOver) {
                 game.gameDuration = (int)(time(NULL) - game.startTime);
-                int mostUsedBlock = 0;
-                int maxCount = 0;
-                for (int i = 0; i < 7; i++) {
-                    if (game.blockUsage[i] > maxCount) {
-                        maxCount = game.blockUsage[i];
-                        mostUsedBlock = i;
-                    }
-                }
-                addHistoryRecord(&game.history, game.currentPlayerID, game.playerName, game.score, 
-                               game.level, game.linesCleared, game.gameDuration, 
-                               game.difficulty, game.blockUsage, mostUsedBlock);
-                saveHistoryToFile(&game.history, "history.txt");
+                // 直接更新历史记录文件，不需要再添加新记录
+                updateHistoryFile(&game);
                 
                 state = GAME_OVER;
             }

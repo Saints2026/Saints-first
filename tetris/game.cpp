@@ -1,4 +1,5 @@
 #include "game.h"
+#include "history.h"
 #include <stdlib.h>
 #include <time.h>
 #include <cstring>
@@ -30,6 +31,10 @@ void initGame(Game *game, Difficulty difficulty, int playerID, const char *playe
     for (int i = 0; i < 7; i++) {
         game->blockUsage[i] = 0;
     }
+    
+    // 清理并初始化历史记录链表
+    clearHistoryList(&game->history);
+    initHistoryList(&game->history);
     
     srand(time(NULL));
     game->current = createTetromino((TetrominoType)(rand() % 7));
@@ -172,6 +177,8 @@ int clearLines(Game *game) {
         if (game->score > game->highScore) {
             game->highScore = game->score;
         }
+        
+        updateHistoryFile(game);
     }
     
     return lineCount;
@@ -413,6 +420,8 @@ void updateClearAnimation(Game *game) {
             if (game->score > game->highScore) {
                 game->highScore = game->score;
             }
+            
+            updateHistoryFile(game);
         }
         
         // 检查是否有新的满行（消除后可能产生新的满行）
@@ -434,4 +443,48 @@ void updateClearAnimation(Game *game) {
 
 bool isClearAnimationActive(Game *game) {
     return game->clearAnimation.active;
+}
+
+void updateHistoryFile(Game *game) {
+    // 检查历史记录链表是否为空
+    if (game->history.head == NULL) {
+        // 如果为空，创建一个新的历史记录节点
+        int mostUsedBlock = 0;
+        int maxCount = 0;
+        for (int i = 0; i < 7; i++) {
+            if (game->blockUsage[i] > maxCount) {
+                maxCount = game->blockUsage[i];
+                mostUsedBlock = i;
+            }
+        }
+        addHistoryRecord(&game->history, game->currentPlayerID, game->playerName, 
+                       game->score, game->level, game->linesCleared, 
+                       (int)(time(NULL) - game->startTime), game->difficulty, 
+                       game->blockUsage, mostUsedBlock);
+    } else {
+        // 如果不为空，更新当前的历史记录节点
+        HistoryNode *current = game->history.head;
+        current->score = game->score;
+        current->level = game->level;
+        current->linesCleared = game->linesCleared;
+        current->gameDuration = (int)(time(NULL) - game->startTime);
+        
+        int maxCount = 0;
+        for (int i = 0; i < 7; i++) {
+            current->blockUsage[i] = game->blockUsage[i];
+            if (game->blockUsage[i] > maxCount) {
+                maxCount = game->blockUsage[i];
+                current->mostUsedBlock = i;
+            }
+        }
+        
+        time_t now = time(NULL);
+        struct tm *timeinfo = localtime(&now);
+        char dateStr[20];
+        strftime(dateStr, 20, "%Y-%m-%d %H:%M:%S", timeinfo);
+        strncpy(current->gameDate, dateStr, 19);
+        current->gameDate[19] = '\0';
+    }
+    
+    saveHistoryToFile(&game->history, "history.txt");
 }

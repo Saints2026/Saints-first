@@ -147,8 +147,8 @@ void saveHistoryToFile(HistoryList *list, const char *filename) {
     std::ofstream file(filename);
     if (file.is_open()) {
         file << "========== 游戏历史记录 ==========" << std::endl;
-        HistoryNode *current = list->head;
-        while (current != NULL) {
+        if (list->head != NULL) {
+            HistoryNode *current = list->head;
             file << "记录ID:" << current->recordID << std::endl;
             file << "玩家ID:" << current->playerID << std::endl;
             file << "玩家名称:" << current->playerName << std::endl;
@@ -165,7 +165,6 @@ void saveHistoryToFile(HistoryList *list, const char *filename) {
             }
             file << std::endl;
             file << std::endl;
-            current = current->next;
         }
         
         file << "========== 玩家统计信息 ==========" << std::endl;

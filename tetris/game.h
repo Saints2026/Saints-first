@@ -64,5 +64,6 @@ void startClearAnimation(Game *game, int *clearedLines, int lineCount);
 void updateClearAnimation(Game *game);
 bool isClearAnimationActive(Game *game);
 int loadHighScore();
+void updateHistoryFile(Game *game);
 
 #endif
